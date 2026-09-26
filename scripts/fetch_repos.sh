@@ -17,6 +17,7 @@ CURATED=(
   # OpenAlgo core + backtesting
   marketcalls/openalgo
   marketcalls/openalgo-python-library
+  marketcalls/data                     # NIFTY daily 1990-2024 (used by research/nifty_quick_tests.py)
   marketcalls/vectorbt-backtesting-skills
   marketcalls/openalgo-execution-skills
   marketcalls/openalgo-indicator-skills

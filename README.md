@@ -28,4 +28,4 @@ Risk-adjusted trade sizing
 
 ## Research
 
-See [docs/RESOURCES.md](docs/RESOURCES.md) for a map of OpenAlgo, backtesting frameworks, Jev (TypeSafe) trading experiments and Obsidian tooling, plus build ideas. `scripts/fetch_repos.sh` clones them into `external/` (gitignored).
+See [docs/INDIA_IDEAS.md](docs/INDIA_IDEAS.md) for Indian-market trading ideas distilled from those repos (with NIFTY tests in `research/`), and [docs/RESOURCES.md](docs/RESOURCES.md) for a map of OpenAlgo, backtesting frameworks, Jev (TypeSafe) trading experiments and Obsidian tooling, plus build ideas. `scripts/fetch_repos.sh` clones them into `external/` (gitignored).
