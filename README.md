@@ -25,3 +25,7 @@ Position-sizing module
 Volatility filter
 
 Risk-adjusted trade sizing
+
+## Research
+
+See [docs/RESOURCES.md](docs/RESOURCES.md) for a map of OpenAlgo, backtesting frameworks, Jev (TypeSafe) trading experiments and Obsidian tooling, plus build ideas. `scripts/fetch_repos.sh` clones them into `external/` (gitignored).
