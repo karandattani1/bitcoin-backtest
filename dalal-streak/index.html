@@ -1,0 +1,1001 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dalal Streak</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one centred phone-width column; a winding lesson path between a sticky stat bar and a fixed tab bar; lessons open full-screen. */
+:root {
+  --bg: #F2F5EE;
+  --surface: #FFFFFF;
+  --ink: #12261F;
+  --muted: #5A6D64;
+  --line: #DBE3D8;
+  --brand: #0E7C5A;
+  --saffron: #E0780E;
+  --good: #1A8F4C;
+  --good-bg: #DDF4E5;
+  --bad: #C93B3B;
+  --bad-bg: #FBE4E1;
+  --locked: #E1E7DE;
+  --locked-ink: #9AA79F;
+  --heart: #E5484D;
+  --flame: #F08A12;
+  --bolt: #D9A400;
+  --u1: #0E7C5A; --u2: #2B65AE; --u3: #B85F07; --u4: #7446BF;
+  --u5: #0C7F81; --u6: #B5410C; --u7: #AD2E5B;
+  --f-display: "Unbounded", "Arial Black", system-ui, sans-serif;
+  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 16px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1814; --surface: #16231E; --ink: #E6EFEA; --muted: #93A79E; --line: #263830;
+    --brand: #23A877; --saffron: #F29A35; --good: #3CC87C; --good-bg: #12301F; --bad: #F06A6A; --bad-bg: #3A1B1B;
+    --locked: #24322C; --locked-ink: #5E7068; --heart: #FF6369; --flame: #FF9F2E; --bolt: #F2C230;
+    --u1: #1E9E70; --u2: #3B7BD0; --u3: #C9700F; --u4: #8A5CD6; --u5: #13989A; --u6: #CF5418; --u7: #C63E6E;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1814; --surface: #16231E; --ink: #E6EFEA; --muted: #93A79E; --line: #263830;
+  --brand: #23A877; --saffron: #F29A35; --good: #3CC87C; --good-bg: #12301F; --bad: #F06A6A; --bad-bg: #3A1B1B;
+  --locked: #24322C; --locked-ink: #5E7068; --heart: #FF6369; --flame: #FF9F2E; --bolt: #F2C230;
+  --u1: #1E9E70; --u2: #3B7BD0; --u3: #C9700F; --u4: #8A5CD6; --u5: #13989A; --u6: #CF5418; --u7: #C63E6E;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--f-body); font-size: 16px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--saffron); outline-offset: 2px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.gut { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.col { max-width: 560px; margin: 0 auto; }
+
+/* ---------- top stat bar ---------- */
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 2px solid var(--line); }
+.topbar .col { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 10px; }
+.wordmark { font-family: var(--f-display); font-weight: 800; font-size: 17px; letter-spacing: -0.01em; color: var(--brand); white-space: nowrap; }
+.wordmark span { color: var(--saffron); }
+.stats { display: flex; gap: 14px; }
+.stat { display: flex; align-items: center; gap: 5px; font-weight: 800; font-family: var(--f-mono); font-size: 15px; }
+.stat svg { width: 22px; height: 22px; }
+.stat.flame { color: var(--flame); } .stat.bolt { color: var(--bolt); } .stat.heart { color: var(--heart); }
+.stat.off { color: var(--locked-ink); }
+
+main.app { padding-block: 16px 120px; }
+.view[hidden] { display: none !important; }
+
+/* ---------- daily goal ---------- */
+.goal { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 2px solid var(--line); border-radius: var(--r); padding: 14px 16px; }
+.goal-meta { flex: 1; min-width: 0; }
+.goal-meta b { display: block; font-size: 15px; }
+.goal-meta small { color: var(--muted); font-size: 13px; }
+.bar { height: 12px; border-radius: 99px; background: var(--locked); overflow: hidden; margin-top: 6px; }
+.bar i { display: block; height: 100%; width: 0; background: var(--bolt); border-radius: 99px; transition: width .5s ease; }
+.ticker { font-family: var(--f-mono); font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; margin-top: 14px; border-block: 1px dashed var(--line); padding-block: 6px; }
+.ticker-track { display: inline-block; animation: tick 40s linear infinite; }
+.ticker .up { color: var(--good); } .ticker .dn { color: var(--bad); }
+@keyframes tick { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ---------- unit banners + path ---------- */
+.unit { margin-top: 26px; }
+.unit-head { --c: var(--u1); background: var(--c); color: #fff; border-radius: var(--r); padding: 16px 18px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 0 color-mix(in srgb, var(--c) 70%, #000); }
+.unit-head .t { flex: 1; min-width: 0; }
+.unit-head small { display: block; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; font-size: 12px; opacity: .85; }
+.unit-head h2 { font-family: var(--f-display); font-size: 19px; font-weight: 700; line-height: 1.2; margin-top: 2px; }
+.unit-head p { margin: 4px 0 0; font-size: 14px; opacity: .92; }
+.guide-btn { flex: none; border: 2px solid rgba(255,255,255,.45); background: rgba(255,255,255,.12); color: #fff; border-radius: 12px; padding: 8px 10px; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; }
+.guide-btn:hover { background: rgba(255,255,255,.22); }
+
+.path { display: flex; flex-direction: column; align-items: center; gap: 52px; padding-block: 56px 34px; }
+.node-wrap { position: relative; }
+.node { --c: var(--u1); width: 74px; height: 70px; border-radius: 50%; border: 0; background: var(--c); color: #fff; display: grid; place-items: center; box-shadow: 0 7px 0 color-mix(in srgb, var(--c) 68%, #000); transition: transform .08s ease, box-shadow .08s ease; }
+.node:active { transform: translateY(5px); box-shadow: 0 2px 0 color-mix(in srgb, var(--c) 68%, #000); }
+.node svg { width: 32px; height: 32px; }
+.node.locked { background: var(--locked); color: var(--locked-ink); box-shadow: 0 7px 0 color-mix(in srgb, var(--locked) 80%, #000); }
+.node.done { background: var(--c); }
+.node.current { outline: 6px solid color-mix(in srgb, var(--c) 28%, transparent); outline-offset: 5px; }
+.node-label { position: absolute; left: 50%; top: calc(100% + 12px); transform: translateX(-50%); font-size: 12px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+.bubble { position: absolute; left: 50%; bottom: calc(100% + 16px); transform: translateX(-50%); background: var(--surface); color: var(--c, var(--brand)); border: 2px solid var(--line); border-radius: 12px; padding: 6px 12px; font-weight: 800; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; animation: bob 1.6s ease-in-out infinite; }
+.bubble::after { content: ""; position: absolute; left: 50%; top: 100%; width: 12px; height: 12px; background: var(--surface); border-right: 2px solid var(--line); border-bottom: 2px solid var(--line); transform: translate(-50%, -6px) rotate(45deg); }
+@keyframes bob { 50% { transform: translate(-50%, -5px); } }
+
+.disclaimer { margin-top: 36px; font-size: 12.5px; color: var(--muted); border-top: 2px solid var(--line); padding-top: 14px; }
+
+/* ---------- generic cards / buttons ---------- */
+.card { background: var(--surface); border: 2px solid var(--line); border-radius: var(--r); padding: 16px; }
+.h-sec { font-family: var(--f-display); font-size: 20px; font-weight: 700; margin: 26px 0 12px; }
+.h-sec:first-child { margin-top: 0; }
+.btn { --c: var(--brand); display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; border: 0; border-radius: 14px; padding: 14px 18px; background: var(--c); color: #fff; font-weight: 800; font-size: 15px; letter-spacing: .06em; text-transform: uppercase; box-shadow: 0 4px 0 color-mix(in srgb, var(--c) 68%, #000); transition: transform .06s, box-shadow .06s; }
+.btn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--c) 68%, #000); }
+.btn:disabled { background: var(--locked); color: var(--locked-ink); box-shadow: 0 4px 0 color-mix(in srgb, var(--locked) 82%, #000); cursor: not-allowed; }
+.btn.ghost { background: transparent; color: var(--muted); box-shadow: none; border: 2px solid var(--line); }
+.btn.warn { --c: var(--bad); }
+.btn.alt { --c: var(--saffron); }
+.row { display: flex; gap: 12px; flex-wrap: wrap; }
+.row > * { flex: 1 1 140px; }
+
+/* ---------- practice + profile ---------- */
+.practice-card { display: flex; gap: 14px; align-items: center; }
+.practice-card .ic { flex: none; width: 54px; height: 54px; border-radius: 14px; display: grid; place-items: center; color: #fff; }
+.practice-card .ic svg { width: 28px; height: 28px; }
+.practice-card .meta { flex: 1; min-width: 0; }
+.practice-card .meta b { display: block; }
+.practice-card .meta small { color: var(--muted); }
+.practice-card .btn { width: auto; flex: none; padding: 10px 14px; font-size: 13px; }
+.stack { display: grid; gap: 12px; }
+
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.tile { display: flex; gap: 10px; align-items: center; }
+.tile svg { width: 26px; height: 26px; flex: none; }
+.tile b { display: block; font-family: var(--f-mono); font-size: 20px; line-height: 1.1; }
+.tile small { color: var(--muted); font-size: 13px; }
+.week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; text-align: center; }
+.week div { display: grid; gap: 6px; justify-items: center; font-size: 12px; color: var(--muted); font-weight: 700; }
+.week i { width: 30px; height: 30px; border-radius: 50%; background: var(--locked); display: grid; place-items: center; color: #fff; font-style: normal; }
+.week i.hit { background: var(--flame); }
+.week i.part { background: color-mix(in srgb, var(--flame) 35%, var(--locked)); }
+.week i.today { outline: 2px solid var(--flame); outline-offset: 2px; }
+.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 12px; }
+.badge { text-align: center; display: grid; justify-items: center; gap: 6px; }
+.badge .medal { width: 58px; height: 58px; border-radius: 18px; display: grid; place-items: center; background: var(--saffron); color: #fff; transform: rotate(-4deg); box-shadow: 0 4px 0 color-mix(in srgb, var(--saffron) 65%, #000); }
+.badge .medal svg { width: 28px; height: 28px; }
+.badge.off .medal { background: var(--locked); color: var(--locked-ink); box-shadow: none; transform: none; }
+.badge b { font-size: 13px; line-height: 1.2; }
+.badge small { font-size: 11.5px; color: var(--muted); line-height: 1.25; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { border: 2px solid var(--line); background: var(--surface); border-radius: 12px; padding: 8px 12px; font-weight: 700; font-size: 14px; }
+.chip[aria-pressed="true"] { border-color: var(--brand); color: var(--brand); background: color-mix(in srgb, var(--brand) 10%, var(--surface)); }
+.setting { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 10px; border-top: 1px solid var(--line); }
+.setting:first-child { border-top: 0; }
+
+/* ---------- bottom nav ---------- */
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--surface); border-top: 2px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.tabbar .col { display: flex; justify-content: space-around; padding-block: 6px; }
+.tab { border: 2px solid transparent; background: none; border-radius: 14px; padding: 6px 16px; display: grid; justify-items: center; gap: 2px; color: var(--muted); font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.tab svg { width: 26px; height: 26px; }
+.tab[aria-current="page"] { color: var(--brand); border-color: color-mix(in srgb, var(--brand) 45%, transparent); background: color-mix(in srgb, var(--brand) 9%, transparent); }
+
+/* ---------- lesson screen ---------- */
+.lesson { position: fixed; inset: 0; z-index: 20; background: var(--bg); display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); }
+.l-top { display: flex; align-items: center; gap: 14px; padding-block: 14px; }
+.icon-btn { border: 0; background: none; color: var(--locked-ink); padding: 4px; display: grid; place-items: center; border-radius: 10px; }
+.icon-btn svg { width: 26px; height: 26px; }
+.pbar { flex: 1; height: 16px; border-radius: 99px; background: var(--locked); overflow: hidden; }
+.pbar i { display: block; height: 100%; width: 0; background: var(--good); border-radius: 99px; transition: width .35s ease; box-shadow: inset 0 4px 0 rgba(255,255,255,.25); }
+.l-body { flex: 1; overflow-y: auto; padding-block: 10px 24px; }
+.l-body > .col { display: flex; flex-direction: column; gap: 18px; min-height: 100%; }
+.kicker { font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--saffron); display: flex; align-items: center; gap: 8px; }
+.kicker .combo { color: var(--flame); }
+.q { font-family: var(--f-display); font-size: 21px; font-weight: 600; line-height: 1.35; letter-spacing: -0.005em; }
+.opts { display: grid; gap: 10px; }
+.opt { display: flex; align-items: center; gap: 12px; text-align: left; width: 100%; border: 2px solid var(--line); border-bottom-width: 4px; background: var(--surface); border-radius: 14px; padding: 13px 14px; font-size: 16px; font-weight: 600; line-height: 1.35; }
+.opt .k { flex: none; width: 26px; height: 26px; border: 2px solid var(--line); border-radius: 8px; display: grid; place-items: center; font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.opt:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 4%, var(--surface)); }
+.opt[aria-pressed="true"] { border-color: #3B82D6; background: color-mix(in srgb, #3B82D6 12%, var(--surface)); color: var(--ink); }
+.opt[aria-pressed="true"] .k { border-color: #3B82D6; color: #3B82D6; }
+.opt.right { border-color: var(--good); background: var(--good-bg); }
+.opt.wrong { border-color: var(--bad); background: var(--bad-bg); }
+.opt:disabled { cursor: default; }
+.tf { grid-template-columns: 1fr 1fr; }
+.tf .opt { justify-content: center; font-size: 18px; padding-block: 18px; }
+.tf .opt .k { display: none; }
+
+.teach { background: var(--surface); border: 2px solid var(--line); border-radius: 20px; padding: 20px; display: grid; gap: 12px; }
+.teach h3 { font-family: var(--f-display); font-size: 22px; font-weight: 700; line-height: 1.25; }
+.teach p { margin: 0; }
+.teach ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.term { justify-self: start; font-size: 13px; font-weight: 700; color: var(--brand); background: color-mix(in srgb, var(--brand) 11%, transparent); border-radius: 99px; padding: 3px 10px; }
+.example { border-left: 4px solid var(--saffron); background: color-mix(in srgb, var(--saffron) 9%, transparent); border-radius: 0 12px 12px 0; padding: 10px 14px; font-size: 15px; }
+.example b { font-family: var(--f-mono); font-weight: 700; }
+
+.cloze { font-size: 20px; font-weight: 600; line-height: 1.6; }
+.blank { display: inline-block; min-width: 110px; border-bottom: 3px solid var(--ink); text-align: center; padding: 0 6px; color: #3B82D6; }
+.blank.empty { color: transparent; }
+.bank { display: flex; flex-wrap: wrap; gap: 10px; }
+.bank .opt { width: auto; }
+.bank .opt .k { display: none; }
+
+.numwrap { display: flex; align-items: stretch; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 14px; background: var(--surface); overflow: hidden; }
+.numwrap span { display: grid; place-items: center; padding: 0 14px; font-family: var(--f-mono); font-weight: 700; font-size: 20px; color: var(--muted); background: color-mix(in srgb, var(--ink) 4%, var(--surface)); }
+.numwrap input { flex: 1; min-width: 0; border: 0; background: transparent; padding: 14px; font-family: var(--f-mono); font-size: 22px; font-weight: 700; color: var(--ink); }
+.numwrap input:focus { outline: none; }
+.numwrap:focus-within { border-color: #3B82D6; }
+.hint { font-size: 13px; color: var(--muted); }
+
+.order-ans { min-height: 64px; display: flex; flex-direction: column; gap: 8px; border-top: 2px solid var(--line); border-bottom: 2px solid var(--line); padding-block: 10px; }
+.order-ans:empty::before { content: "Tap the steps below in order"; color: var(--locked-ink); font-weight: 600; font-size: 15px; padding: 10px 2px; }
+.order-ans .opt .k { border-color: var(--brand); color: var(--brand); }
+
+.match { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.match .opt { justify-content: center; text-align: center; font-size: 14.5px; min-height: 64px; padding: 10px; }
+.match .opt .k { display: none; }
+.match .opt.done { opacity: .35; border-color: var(--good); background: var(--good-bg); }
+.match .opt.flash { border-color: var(--bad); background: var(--bad-bg); animation: shake .3s; }
+@keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+.l-foot { border-top: 2px solid var(--line); padding-block: 14px calc(14px + env(safe-area-inset-bottom, 0px)); background: var(--bg); }
+.l-foot .col { display: grid; gap: 12px; }
+.fb { display: none; gap: 4px; }
+.fb .fb-title { font-family: var(--f-display); font-weight: 700; font-size: 19px; display: flex; align-items: center; gap: 8px; }
+.fb .fb-title svg { width: 26px; height: 26px; }
+.fb .fb-ans { font-weight: 700; }
+.fb .fb-why { font-size: 15px; }
+.l-foot.good { background: var(--good-bg); border-color: transparent; }
+.l-foot.good .fb { display: grid; color: var(--good); }
+.l-foot.good .btn { --c: var(--good); }
+.l-foot.bad { background: var(--bad-bg); border-color: transparent; }
+.l-foot.bad .fb { display: grid; color: var(--bad); }
+.l-foot.bad .btn { --c: var(--bad); }
+.l-foot .fb-why { color: var(--ink); }
+
+.done-screen { text-align: center; align-items: center; justify-content: center; padding-top: 24px; }
+.done-screen h2 { font-family: var(--f-display); font-size: 28px; color: var(--saffron); }
+.done-screen p { margin: 0; color: var(--muted); }
+.done-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; }
+.dt { --c: var(--bolt); border: 2px solid var(--c); border-radius: 14px; overflow: hidden; }
+.dt small { display: block; background: var(--c); color: #fff; font-weight: 800; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; padding: 4px; }
+.dt b { display: block; font-family: var(--f-mono); font-size: 20px; padding: 10px 4px; }
+.new-badge { display: flex; gap: 12px; align-items: center; text-align: left; width: 100%; }
+.trophy { width: 96px; height: 96px; color: var(--saffron); }
+
+/* ---------- modal + toast ---------- */
+.modal { position: fixed; inset: 0; z-index: 30; background: rgba(8, 16, 12, .55); display: flex; align-items: flex-end; justify-content: center; }
+.sheet { width: 100%; max-width: 560px; background: var(--surface); border-radius: 22px 22px 0 0; padding: 22px max(18px, env(safe-area-inset-right, 0px)) calc(22px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px)); display: grid; gap: 14px; max-height: 85%; overflow-y: auto; animation: up .2s ease; }
+.sheet h3 { font-family: var(--f-display); font-size: 20px; }
+.sheet p { margin: 0; color: var(--muted); }
+.sheet .teach { border: 0; padding: 0; }
+.sheet hr { border: 0; border-top: 2px solid var(--line); margin: 4px 0; width: 100%; }
+@keyframes up { from { transform: translateY(30px); opacity: 0; } }
+.toast { position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 40; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 14px; max-width: calc(100% - 32px); }
+canvas#confetti { position: fixed; inset: 0; z-index: 25; pointer-events: none; width: 100%; height: 100%; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+@media (max-width: 380px) {
+  .wordmark { font-size: 14px; }
+  .stats { gap: 10px; }
+  .q { font-size: 19px; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar gut">
+  <div class="col">
+    <div class="wordmark">Dalal<span>Streak</span></div>
+    <div class="stats">
+      <div class="stat flame" id="st-streak" title="Day streak"></div>
+      <div class="stat bolt" id="st-xp" title="Total XP"></div>
+      <div class="stat heart" id="st-hearts" title="Hearts"></div>
+    </div>
+  </div>
+</header>
+
+<main class="app gut">
+  <div class="col">
+    <section class="view" id="v-learn" aria-label="Learn">
+      <div class="goal">
+        <div class="goal-meta">
+          <b id="goal-title">Daily goal</b>
+          <small id="goal-sub"></small>
+          <div class="bar"><i id="goal-bar"></i></div>
+        </div>
+      </div>
+      <div class="ticker" aria-hidden="true"><div class="ticker-track" id="ticker"></div></div>
+      <div id="path"></div>
+      <p class="disclaimer">For learning only, not investment advice. Tax figures follow FY 2025-26 rules and interest rates change every quarter, so check current numbers before you act. Ticker values are illustrative.</p>
+    </section>
+
+    <section class="view" id="v-practice" aria-label="Practice" hidden></section>
+    <section class="view" id="v-profile" aria-label="Profile" hidden></section>
+  </div>
+</main>
+
+<nav class="tabbar gut" aria-label="Main">
+  <div class="col">
+    <button class="tab" data-tab="learn" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg>Learn</button>
+    <button class="tab" data-tab="practice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>Practice</button>
+    <button class="tab" data-tab="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="4"/><path d="M4 20.5c1.4-3.6 4.4-5.5 8-5.5s6.6 1.9 8 5.5"/></svg>Profile</button>
+  </div>
+</nav>
+
+<div class="lesson" id="lesson" hidden>
+  <div class="l-top gut"><div class="col" style="display:flex;align-items:center;gap:14px;width:100%">
+    <button class="icon-btn" id="l-close" aria-label="Quit lesson"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <div class="pbar" role="progressbar" aria-label="Lesson progress"><i id="l-prog"></i></div>
+    <div class="stat heart" id="l-hearts"></div>
+  </div></div>
+  <div class="l-body gut" id="l-body"></div>
+  <div class="l-foot gut" id="l-foot">
+    <div class="col">
+      <div class="fb" id="l-fb" aria-live="polite">
+        <div class="fb-title" id="fb-title"></div>
+        <div class="fb-ans" id="fb-ans"></div>
+        <div class="fb-why" id="fb-why"></div>
+      </div>
+      <button class="btn" id="l-check" disabled>Check</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" hidden></div>
+<canvas id="confetti" hidden></canvas>
+
+<script>
+/* ================= icons ================= */
+const I = {
+  flame: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.6 2.3c.3 3-1.3 4.6-2.9 6.3C8 10.4 6.3 12.3 6.3 15.3a5.7 5.7 0 0 0 11.4 0c0-2.4-1-4.3-2.1-5.6-.2 1.3-.9 2.4-2 2.9.6-3.6-.3-7.4-1-10.3Z"/></svg>',
+  bolt: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 2 4.8 13.3h6l-1.3 8.7 8.7-11.4h-6L13.5 2Z"/></svg>',
+  heart: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20.6s-8.3-5-8.3-11A4.6 4.6 0 0 1 12 6.8a4.6 4.6 0 0 1 8.3 2.8c0 6-8.3 11-8.3 11Z"/></svg>',
+  star: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2.8 2.8 5.8 6.3.8-4.6 4.4 1.1 6.3L12 17.1l-5.6 3 1.1-6.3L2.9 9.4l6.3-.8L12 2.8Z"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+  lock: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10V7.5a5 5 0 0 1 10 0V10h1a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 18 21H6a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 6 10h1Zm2.5 0h5V7.5a2.5 2.5 0 0 0-5 0V10Z"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+  rupee: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12M6 9h12M9 4c6 0 6 9 0 9H6l9 7"/></svg>',
+  target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>',
+  shuffle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3.5c4 0 6 10 10 10H21M3 17h3.5c1.6 0 2.8-1.6 3.8-3.6M14 9.5c.8-1.4 1.6-2.5 2.5-2.5H21M18 4l3 3-3 3M18 14l3 3-3 3"/></svg>',
+  chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16M6 15l4-5 3 3 5-7"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5.5c0 4.3 3 7.7 7 9.5 4-1.8 7-5.2 7-9.5V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>',
+  trophy: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 3h10v2h3.5v2.5A4.5 4.5 0 0 1 16.6 12 5 5 0 0 1 13 14.8V17h3v4H8v-4h3v-2.2A5 5 0 0 1 7.4 12 4.5 4.5 0 0 1 3.5 7.5V5H7V3Zm10 4v2.8a2.5 2.5 0 0 0 1.5-2.3V7H17ZM5.5 7v.5A2.5 2.5 0 0 0 7 9.8V7H5.5Z"/></svg>',
+  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5v-15Z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>'
+};
+
+/* ================= course content ================= */
+/* Item types:
+   teach {h, b, ex?, term?}         concept card
+   mcq   {q, o[], a, w}             multiple choice (a = index of right option)
+   tf    {q, a:boolean, w}          true / false
+   num   {q, a, pre?, tol?, w}      type a number
+   cloze {s (with ___), o[], a, w}  fill the blank from a word bank
+   match {p:[[left,right]...], w}  tap the pairs
+   order {q, o[] (correct order), w} put steps in order                    */
+const UNITS = [
+{ id:"u1", title:"Money Foundations", desc:"Budgets, inflation and staying safe on UPI", lessons:[
+  { id:"u1l1", title:"Budget like a pro", items:[
+    { t:"teach", term:"Bachat · बचत", h:"The 50 / 30 / 20 rule", b:"<p>Split your <b>take-home pay</b> into three buckets:</p><ul><li><b>50%</b> needs: rent, groceries, EMIs, school fees, electricity</li><li><b>30%</b> wants: Swiggy orders, OTT, travel, gadgets</li><li><b>20%</b> savings and investments: SIPs, PPF, emergency fund</li></ul>", ex:"Take-home <b>₹50,000</b> → needs <b>₹25,000</b>, wants <b>₹15,000</b>, savings <b>₹10,000</b>" },
+    { t:"num", q:"Priya takes home ₹60,000 a month. Using 50/30/20, how much should go to savings and investments?", pre:"₹", a:12000, w:"20% of ₹60,000 is ₹12,000." },
+    { t:"mcq", q:"Which of these is a need, not a want?", o:["House rent","Netflix and Hotstar subscriptions","Weekend dinner at a café","Upgrading to the latest phone"], a:0, w:"Rent keeps a roof over your head. The rest are nice to have." },
+    { t:"tf", q:"“Pay yourself first” means investing whatever is left at the end of the month.", a:false, w:"It means the opposite: an auto-debit SIP or RD on salary day moves savings out before you can spend it." },
+    { t:"order", q:"Put the steps of a monthly budget in order.", o:["Write down your take-home income","List fixed costs like rent and EMIs","Set an auto-debit savings target","Allocate what’s left to wants","Review at month-end and adjust"], w:"Income first, fixed costs next, savings before wants, then review." }
+  ]},
+  { id:"u1l2", title:"Inflation and your safety net", items:[
+    { t:"teach", term:"Mehngai · महंगाई", h:"Inflation eats idle money", b:"<p>Inflation is how fast prices rise. The RBI targets <b>4% CPI inflation</b>, with a tolerance band of 2% to 6%.</p><p>If your savings account pays 3% and inflation runs at 5%, your money buys <b>less</b> every year.</p><p>An <b>emergency fund</b> of 6 months of expenses protects you from job loss or a hospital bill, so you never have to sell investments in a panic.</p>", ex:"Monthly expenses <b>₹30,000</b> → emergency fund <b>₹1,80,000</b>" },
+    { t:"mcq", q:"What is the RBI’s inflation target?", o:["4% CPI, within a 2% to 6% band","10% GDP growth","0% inflation","Whatever the repo rate is"], a:0, w:"The Monetary Policy Committee aims for 4% CPI inflation, with 2% to 6% as the tolerance band." },
+    { t:"num", q:"Arjun spends ₹40,000 a month. How big should a 6-month emergency fund be?", pre:"₹", a:240000, w:"6 × ₹40,000 = ₹2,40,000." },
+    { t:"mcq", q:"Where is the best place to keep an emergency fund?", o:["Sweep-in FD or a liquid fund","Small-cap mutual fund","A plot of land","Gold jewellery"], a:0, w:"Emergency money must be safe and available within a day. Small caps can fall 30%, and land and jewellery are slow to sell." },
+    { t:"cloze", s:"Inflation reduces the ___ of your money.", o:["purchasing power","face value","liquidity"], a:0, w:"A ₹100 note stays ₹100, but it buys fewer things each year." }
+  ]},
+  { id:"u1l3", title:"UPI and fraud safety", items:[
+    { t:"teach", h:"Your UPI PIN only sends money", b:"<p>UPI, built by NPCI, moves money between bank accounts instantly.</p><ul><li>You <b>never</b> need your PIN or an OTP to <b>receive</b> money.</li><li>A “collect request” asks you to <b>pay</b>, whatever the message says.</li><li>Report fraud fast on <b>1930</b> or cybercrime.gov.in. The first hours matter most.</li></ul>" },
+    { t:"tf", q:"You must enter your UPI PIN to receive a refund.", a:false, w:"Receiving money never needs a PIN. Anyone asking you to enter it “to receive” is trying to take your money." },
+    { t:"mcq", q:"A caller says they are from your bank and needs your OTP to block a suspicious card. What do you do?", o:["Hang up and call the number on your card or in the bank app","Share the OTP quickly so they can block it","Share only the first 3 digits","Ask them to send a WhatsApp message instead"], a:0, w:"Banks never ask for OTPs. Call back on an official number you looked up yourself." },
+    { t:"match", p:[["UPI","Instant bank-to-bank payments"],["KYC","Verifying your identity"],["OTP","One-time code you never share"],["1930","Cyber fraud helpline"]], w:"These four come up in every fraud-safety talk." },
+    { t:"mcq", q:"Which of these is a red flag?", o:["A “collect request” from a stranger who says you won a prize","A payment you started at a shop’s QR code","An SMS from your bank after you paid a bill","A UPI Lite top-up you started yourself"], a:0, w:"Prize money never arrives through a collect request. Approving it sends money out." }
+  ]}
+]},
+{ id:"u2", title:"Safe Savings", desc:"FDs, PPF, EPF and the magic of doubling", lessons:[
+  { id:"u2l1", title:"FDs and RDs", items:[
+    { t:"teach", h:"Fixed and recurring deposits", b:"<ul><li><b>FD</b>: put in a lump sum for a fixed term at a fixed rate.</li><li><b>RD</b>: deposit a fixed amount every month at a fixed rate.</li><li>FD and RD interest is taxed at your <b>income tax slab</b>.</li><li><b>DICGC</b> insures bank deposits up to <b>₹5 lakh per depositor per bank</b>, principal and interest together.</li></ul>", ex:"₹1,00,000 at 7% compounded yearly → <b>₹1,14,490</b> after 2 years" },
+    { t:"num", q:"How much of your deposits does DICGC insure per bank?", pre:"₹", a:500000, w:"₹5 lakh per depositor per bank, covering principal and interest." },
+    { t:"mcq", q:"You want to save ₹3,000 every month for 2 years at a fixed rate. Which product fits?", o:["Recurring deposit","Fixed deposit","Current account","Credit card"], a:0, w:"An RD takes a fixed monthly amount. An FD takes one lump sum." },
+    { t:"tf", q:"FD interest is taxed at your income tax slab rate.", a:true, w:"FD interest is added to your income and taxed at your slab. Banks deduct TDS above a threshold." },
+    { t:"num", q:"₹1,00,000 in an FD at 7% a year, compounded yearly. What is it worth after 2 years?", pre:"₹", a:114490, tol:60, w:"1,00,000 × 1.07 × 1.07 = ₹1,14,490." }
+  ]},
+  { id:"u2l2", title:"PPF, EPF and friends", items:[
+    { t:"teach", term:"EEE", h:"Government-backed savings", b:"<ul><li><b>PPF</b>: 15-year lock-in, up to <b>₹1.5 lakh</b> a year, rate set every quarter by the government (7.1% for several years now). Fully tax-free: EEE.</li><li><b>EPF</b>: for salaried people. You and your employer each put in 12% of basic pay.</li><li><b>Sukanya Samriddhi</b>: savings scheme for a girl child.</li><li><b>NPS</b>: market-linked pension; part goes into an annuity at 60.</li></ul><p><b>EEE</b> means exempt when you invest, while it earns, and when you withdraw.</p>" },
+    { t:"mcq", q:"What is the lock-in period of a PPF account?", o:["15 years","5 years","3 years","Until age 60"], a:0, w:"PPF matures after 15 years and can be extended in blocks of 5 years." },
+    { t:"match", p:[["PPF","15-year, government-backed, EEE"],["EPF","Salaried, 12% of basic pay"],["Sukanya Samriddhi","Savings for a girl child"],["NPS","Market-linked pension"]], w:"Four schemes most Indian families use." },
+    { t:"num", q:"What is the most you can deposit in PPF in one financial year?", pre:"₹", a:150000, w:"₹1.5 lakh per financial year." },
+    { t:"tf", q:"EEE means the investment, the interest and the maturity amount are all tax-exempt.", a:true, w:"Exempt, Exempt, Exempt. PPF and EPF (within limits) get this treatment." }
+  ]},
+  { id:"u2l3", title:"The Rule of 72", items:[
+    { t:"teach", h:"How long to double your money?", b:"<p>Divide <b>72</b> by the yearly return to get roughly how many years it takes to double.</p>", ex:"At 8% a year: 72 ÷ 8 = <b>9 years</b> to double" },
+    { t:"num", q:"Your money earns 6% a year. Roughly how many years to double it?", a:12, tol:0.2, w:"72 ÷ 6 = 12 years." },
+    { t:"num", q:"An equity fund is assumed to return 12% a year. Roughly how many years to double?", a:6, tol:0.2, w:"72 ÷ 12 = 6 years. Equity returns are not guaranteed, so treat this as a rough guide." },
+    { t:"mcq", q:"Inflation is 6%. Roughly how long until prices double?", o:["12 years","6 years","24 years","72 years"], a:0, w:"The rule works for inflation too: 72 ÷ 6 = 12. Your expenses double in about 12 years." },
+    { t:"cloze", s:"Money doubles faster when the rate of return is ___.", o:["higher","lower","fixed"], a:0, w:"A higher rate means a smaller number of years: 72 ÷ rate." }
+  ]}
+]},
+{ id:"u3", title:"Stock Market Basics", desc:"NSE, BSE, Sensex, Nifty and your first trade", lessons:[
+  { id:"u3l1", title:"Exchanges and indices", items:[
+    { t:"teach", h:"Where shares are traded", b:"<ul><li><b>BSE</b> on Dalal Street, Mumbai, is Asia’s oldest exchange. Its index, the <b>Sensex</b>, tracks 30 large companies.</li><li><b>NSE</b> in Bandra Kurla Complex runs the <b>Nifty 50</b>, an index of 50 large companies.</li><li><b>SEBI</b> regulates the market and protects investors.</li><li>Normal trading hours: <b>9:15 AM to 3:30 PM IST</b>, Monday to Friday.</li></ul>" },
+    { t:"match", p:[["SEBI","Market regulator"],["Sensex","30-stock BSE index"],["Nifty 50","50-stock NSE index"],["Dalal Street","Home of the BSE"]], w:"These names show up in every market headline." },
+    { t:"mcq", q:"When is the normal equity trading session in India?", o:["9:15 AM to 3:30 PM IST","10:00 AM to 4:00 PM IST","9:30 AM to 4:00 PM EST","24 hours"], a:0, w:"Pre-open runs 9:00 to 9:15 AM, then normal trading from 9:15 AM to 3:30 PM." },
+    { t:"cloze", s:"Dalal Street in Mumbai is home to the ___.", o:["BSE","NSE","RBI"], a:0, w:"The BSE is on Dalal Street. The NSE is in Bandra Kurla Complex." },
+    { t:"tf", q:"If the Sensex rises 1% today, every stock in it went up.", a:false, w:"An index is a weighted average. Some stocks can fall while the index rises." }
+  ]},
+  { id:"u3l2", title:"Demat and your first trade", items:[
+    { t:"teach", term:"T+1", h:"What you need to buy a share", b:"<ul><li><b>PAN</b> and <b>KYC</b> (Aadhaar, bank details)</li><li>A <b>Demat account</b>, which holds shares electronically at a depository: <b>NSDL</b> or <b>CDSL</b></li><li>A <b>trading account</b> with a SEBI-registered broker</li></ul><p>India settles trades on <b>T+1</b>: shares you buy today land in your Demat account the next trading day.</p>" },
+    { t:"order", q:"Put the steps to buy your first share in order.", o:["Keep PAN and Aadhaar ready","Complete KYC with a broker","Open Demat and trading accounts","Add money from your bank","Place a buy order"], w:"KYC and accounts come first, then money, then the order." },
+    { t:"mcq", q:"What does a Demat account do?", o:["Holds your shares electronically","Lends you money to trade","Gives you stock tips","Pays you interest"], a:0, w:"Demat = dematerialised. It replaced paper share certificates." },
+    { t:"mcq", q:"Which are India’s two depositories?", o:["NSDL and CDSL","NSE and BSE","SEBI and RBI","AMFI and NPCI"], a:0, w:"NSE and BSE are exchanges. NSDL and CDSL hold your shares." },
+    { t:"mcq", q:"You buy shares on Monday. When do they reach your Demat account?", o:["Tuesday (T+1)","Monday evening","Wednesday (T+2)","Next Monday"], a:0, w:"India moved to T+1 settlement in 2023, one of the fastest cycles in the world." }
+  ]},
+  { id:"u3l3", title:"Orders and market cap", items:[
+    { t:"teach", h:"How to place an order, and how big is the company?", b:"<ul><li><b>Market order</b>: buy now at the best price available.</li><li><b>Limit order</b>: buy only at your price or better.</li><li><b>Market cap</b> = share price × number of shares.</li><li>SEBI’s categories: <b>large cap</b> = top 100 companies, <b>mid cap</b> = 101 to 250, <b>small cap</b> = 251 onwards.</li></ul>", ex:"10 crore shares × ₹250 = <b>₹2,500 crore</b> market cap" },
+    { t:"mcq", q:"You only want to buy a stock if it drops to ₹500 or below. Which order do you use?", o:["Limit order at ₹500","Market order","Stop-loss order","After-market order at any price"], a:0, w:"A limit order fills only at your price or better." },
+    { t:"num", q:"A company has 10 crore shares at ₹250 each. What is its market cap in ₹ crore?", a:2500, w:"10 crore × ₹250 = ₹2,500 crore." },
+    { t:"match", p:[["Large cap","Top 100 by market cap"],["Mid cap","Ranked 101 to 250"],["Small cap","Ranked 251 onwards"],["Blue chip","Established, reliable large company"]], w:"SEBI defines the cap buckets so fund labels mean the same everywhere." },
+    { t:"tf", q:"A ₹50 share is a cheaper company than a ₹5,000 share.", a:false, w:"Share price alone means nothing. Compare market cap and valuation (like P/E), not the price tag." }
+  ]}
+]},
+{ id:"u4", title:"Mutual Funds and SIPs", desc:"NAV, SIPs, compounding and choosing funds", lessons:[
+  { id:"u4l1", title:"How mutual funds work", items:[
+    { t:"teach", h:"A shared basket of investments", b:"<p>A mutual fund pools money from many investors. A fund manager at an <b>AMC</b> invests it.</p><ul><li><b>NAV</b>: the value of one unit, calculated every business day.</li><li><b>Expense ratio</b>: the yearly fee, taken out of the fund.</li><li><b>Direct plans</b> skip distributor commission, so they cost less than <b>regular plans</b>.</li></ul>", ex:"Invest <b>₹10,000</b> at NAV <b>₹50</b> → you get <b>200 units</b>" },
+    { t:"mcq", q:"What is NAV?", o:["The value of one unit of the fund","The fund’s yearly return","The minimum investment","The fund manager’s fee"], a:0, w:"Net Asset Value = (assets − liabilities) ÷ number of units." },
+    { t:"num", q:"You invest ₹10,000 in a fund at a NAV of ₹50. How many units do you get?", a:200, w:"₹10,000 ÷ ₹50 = 200 units." },
+    { t:"mcq", q:"Why does a direct plan usually return more than the regular plan of the same fund?", o:["It has a lower expense ratio","It has a better fund manager","It invests in different stocks","It is guaranteed by SEBI"], a:0, w:"Same portfolio, no distributor commission, so the yearly fee is lower." },
+    { t:"tf", q:"A fund with NAV ₹500 is more expensive than one with NAV ₹20.", a:false, w:"NAV only shows the price per unit. Your returns depend on percentage growth, not the NAV level." }
+  ]},
+  { id:"u4l2", title:"SIPs and compounding", items:[
+    { t:"teach", term:"SIP", h:"Invest a little, every month", b:"<p>A <b>Systematic Investment Plan</b> invests a fixed amount on a fixed date.</p><ul><li><b>Rupee cost averaging</b>: the same ₹ buys more units when prices fall.</li><li><b>Compounding</b>: returns earn returns, so time matters more than the amount.</li></ul>", ex:"₹5,000 a month for 20 years at an assumed 12% → about <b>₹50 lakh</b> (you invested ₹12 lakh)" },
+    { t:"mcq", q:"What is rupee cost averaging?", o:["Buying more units when prices are low and fewer when high","Always buying at the lowest price","Getting a fixed return each month","Averaging your losses across stocks"], a:0, w:"A fixed SIP amount automatically buys more units in a dip." },
+    { t:"num", q:"You run a ₹5,000 monthly SIP for 10 years. How much money did you put in?", pre:"₹", a:600000, w:"₹5,000 × 12 × 10 = ₹6,00,000. Growth comes on top." },
+    { t:"mcq", q:"The market falls 20% and your SIP is down. Your goal is 15 years away. What does a sound plan say?", o:["Keep the SIP going","Stop the SIP until markets recover","Sell everything","Move it all to an FD"], a:0, w:"Falls are when your SIP buys the most units. Stopping locks in the loss." },
+    { t:"cloze", s:"Starting early matters most because of ___.", o:["compounding","inflation","brokerage"], a:0, w:"Ten extra years of compounding can matter more than doubling your SIP amount later." }
+  ]},
+  { id:"u4l3", title:"Picking a fund type", items:[
+    { t:"teach", h:"Know your fund categories", b:"<ul><li><b>Index fund</b>: copies an index like the Nifty 50 at a very low cost.</li><li><b>Flexi cap</b>: invests across large, mid and small caps.</li><li><b>ELSS</b>: tax-saving equity fund with a <b>3-year lock-in</b>.</li><li><b>Liquid fund</b>: very short-term debt, for parking cash.</li></ul><p>Every scheme carries a SEBI <b>Riskometer</b> from Low to Very High.</p>" },
+    { t:"match", p:[["ELSS","Tax-saver with 3-year lock-in"],["Index fund","Passively tracks the Nifty or Sensex"],["Liquid fund","Parking cash for days or weeks"],["Flexi cap","Mixes large, mid and small caps"]], w:"Choose by goal and time horizon, not by last year’s return." },
+    { t:"mcq", q:"What is the lock-in period of an ELSS fund?", o:["3 years","5 years","15 years","None"], a:0, w:"ELSS has the shortest lock-in among the old-regime 80C options." },
+    { t:"mcq", q:"What does the Riskometer on a fund factsheet show?", o:["How risky the scheme is, from Low to Very High","The fund’s guaranteed return","The fund manager’s rating","How many investors it has"], a:0, w:"SEBI requires every scheme to show this label." },
+    { t:"tf", q:"A fund that returned 40% last year will do it again this year.", a:false, w:"Past performance does not predict future returns. Last year’s top fund is often an average one next year." }
+  ]}
+]},
+{ id:"u5", title:"Tax Smart", desc:"Capital gains, regimes and 80C for FY 2025-26", lessons:[
+  { id:"u5l1", title:"Capital gains on shares", items:[
+    { t:"teach", term:"LTCG · STCG", h:"Tax when you sell listed shares and equity funds", b:"<ul><li>Held <b>12 months or less</b>: short-term gain, taxed at <b>20%</b>.</li><li>Held <b>more than 12 months</b>: long-term gain, taxed at <b>12.5%</b> on gains above <b>₹1.25 lakh</b> a year.</li></ul><p>These rates apply to sales from 23 July 2024. Add 4% cess on top.</p>", ex:"LTCG of <b>₹2,25,000</b> → taxable <b>₹1,00,000</b> → tax <b>₹12,500</b> + cess" },
+    { t:"mcq", q:"How long must you hold a listed share for the gain to be long-term?", o:["More than 12 months","More than 24 months","More than 36 months","Any period"], a:0, w:"Listed equity and equity funds turn long-term after 12 months." },
+    { t:"num", q:"Your LTCG from equity this year is ₹2,25,000. How much of it is taxable after the yearly exemption?", pre:"₹", a:100000, w:"₹2,25,000 − ₹1,25,000 = ₹1,00,000." },
+    { t:"num", q:"What is the tax on that ₹1,00,000 at 12.5% (ignore cess)?", pre:"₹", a:12500, w:"12.5% × ₹1,00,000 = ₹12,500." },
+    { t:"tf", q:"Short-term gains on listed shares are taxed at 20%.", a:true, w:"STCG on listed equity is 20% for sales from 23 July 2024." }
+  ]},
+  { id:"u5l2", title:"Old vs new regime", items:[
+    { t:"teach", h:"Two ways to file your income tax", b:"<ul><li>The <b>new regime</b> is the default. For FY 2025-26, income up to <b>₹12 lakh</b> pays no tax thanks to the rebate. Salaried people also get a <b>₹75,000</b> standard deduction, so ₹12.75 lakh salary pays nothing.</li><li>The <b>old regime</b> has higher rates but allows deductions such as <b>80C</b> (up to ₹1.5 lakh: PPF, ELSS, EPF, life cover, home loan principal) and <b>80D</b> (health insurance).</li></ul>" },
+    { t:"num", q:"What is the yearly limit for Section 80C deductions?", pre:"₹", a:150000, w:"₹1.5 lakh, available only in the old regime." },
+    { t:"mcq", q:"Which of these does NOT count under Section 80C?", o:["Health insurance premium","PPF deposit","ELSS investment","Home loan principal repayment"], a:0, w:"Health insurance falls under Section 80D." },
+    { t:"tf", q:"The new tax regime is the default unless you choose the old one.", a:true, w:"Since FY 2023-24 the new regime is the default. You can opt for the old one when you file." },
+    { t:"num", q:"A salaried person in the new regime, FY 2025-26, with no other income. Up to what salary do they pay zero tax?", pre:"₹", a:1275000, w:"₹12 lakh rebate limit + ₹75,000 standard deduction = ₹12.75 lakh." }
+  ]},
+  { id:"u5l3", title:"Costs of trading", items:[
+    { t:"teach", h:"Every trade has a bill", b:"<ul><li><b>STT</b>: securities transaction tax on buying and selling</li><li><b>Exchange and SEBI fees</b></li><li><b>GST</b>: 18% on brokerage and charges</li><li><b>Stamp duty</b>: on the buy side</li><li><b>DP charge</b>: when shares leave your Demat on sale</li></ul><p>Intraday equity profit is <b>speculative business income</b> and F&amp;O profit is <b>non-speculative business income</b>, both taxed at your slab.</p>" },
+    { t:"match", p:[["STT","Tax on each securities trade"],["Stamp duty","Levied on the buy side"],["GST","18% on brokerage and charges"],["DP charge","Fee when shares leave your Demat"]], w:"Check your broker’s contract note to see each one." },
+    { t:"mcq", q:"How is profit from intraday equity trading taxed?", o:["As speculative business income at your slab","As STCG at 20%","As LTCG at 12.5%","It is tax-free"], a:0, w:"Intraday has no delivery, so it is treated as speculative business income." },
+    { t:"tf", q:"Zero-brokerage trading means you pay nothing per trade.", a:false, w:"STT, exchange fees, GST, stamp duty and DP charges still apply." }
+  ]}
+]},
+{ id:"u6", title:"Trading and Risk", desc:"Position sizing, stop-losses and F&O reality", lessons:[
+  { id:"u6l1", title:"Size your risk", items:[
+    { t:"teach", h:"Decide your loss before your profit", b:"<ul><li>The <b>1% rule</b>: risk no more than 1% of your capital on one trade.</li><li>A <b>stop-loss</b> is the price where you admit you were wrong and exit.</li><li>Position size = money at risk ÷ (entry price − stop price)</li></ul>", ex:"Capital ₹2,00,000 → risk ₹2,000. Buy at ₹400, stop at ₹380 → <b>100 shares</b>" },
+    { t:"num", q:"Your trading capital is ₹2,00,000. Under the 1% rule, what is the most you should lose on one trade?", pre:"₹", a:2000, w:"1% of ₹2,00,000 = ₹2,000." },
+    { t:"num", q:"You buy at ₹400 with a stop-loss at ₹380 and can risk ₹2,000. How many shares can you buy?", a:100, w:"Risk per share is ₹20. ₹2,000 ÷ ₹20 = 100 shares." },
+    { t:"mcq", q:"What is a stop-loss for?", o:["Capping how much you can lose on a trade","Guaranteeing a profit","Avoiding brokerage","Stopping the market from falling"], a:0, w:"It caps the damage. In a fast gap down it can still fill below your price." },
+    { t:"tf", q:"Buying more of a losing intraday trade to “average down” is a safe habit.", a:false, w:"Averaging down a losing trade adds size to a position that is already wrong. It is a common way small losses turn into big ones." }
+  ]},
+  { id:"u6l2", title:"F&O reality check", items:[
+    { t:"teach", term:"F&O", h:"Futures and options, with leverage", b:"<ul><li>A <b>future</b> is an obligation to buy or sell at a set price on expiry.</li><li>A <b>call</b> option is the right to buy; a <b>put</b> is the right to sell.</li><li>Contracts trade in fixed <b>lot sizes</b>, and margin gives you leverage.</li></ul><p>SEBI’s 2024 study found <b>93% of individual F&amp;O traders lost money</b> from FY22 to FY24, over ₹1.8 lakh crore in total.</p>" },
+    { t:"mcq", q:"According to SEBI’s study, what share of individual F&O traders lost money from FY22 to FY24?", o:["About 93%","About 50%","About 25%","About 10%"], a:0, w:"Roughly 9 in 10. Costs and leverage work against most retail traders." },
+    { t:"match", p:[["Call option","Right to buy"],["Put option","Right to sell"],["Lot size","Fixed quantity per contract"],["Expiry","Date the contract ends"]], w:"Know these before you ever see an option chain." },
+    { t:"tf", q:"The most an option buyer can lose is the premium they paid.", a:true, w:"True for buyers. Option sellers can lose far more than the premium they collect." },
+    { t:"num", q:"You hold a futures position worth ₹15,00,000 using ₹3,00,000 margin. The price moves 5% against you. How much do you lose?", pre:"₹", a:75000, w:"5% of ₹15,00,000 = ₹75,000. That is 25% of your margin, from a 5% move." }
+  ]},
+  { id:"u6l3", title:"Circuits and sessions", items:[
+    { t:"teach", h:"Speed bumps in the market", b:"<ul><li><b>Pre-open session</b>: 9:00 to 9:15 AM, where the opening price is discovered.</li><li><b>Circuit limits</b>: many stocks have a daily band, like 5% or 10%. At the <b>upper circuit</b> there are only buyers; at the lower circuit, only sellers.</li><li><b>Market-wide circuit breakers</b> halt trading if the Sensex or Nifty moves <b>10%, 15% or 20%</b>.</li></ul>" },
+    { t:"mcq", q:"When does the pre-open session run?", o:["9:00 to 9:15 AM","8:00 to 9:00 AM","3:30 to 4:00 PM","There isn’t one"], a:0, w:"Orders collected in pre-open set a fair opening price." },
+    { t:"mcq", q:"A stock is “locked in upper circuit”. What does that mean?", o:["It hit the day’s maximum rise and has buyers but no sellers","It has been delisted","It can only fall from here","Trading is closed for the year"], a:0, w:"You may not be able to buy, even with an order in." },
+    { t:"cloze", s:"Market-wide circuit breakers trigger at index moves of 10%, 15% and ___.", o:["20%","25%","50%"], a:0, w:"A 20% move halts trading for the rest of the day." }
+  ]}
+]},
+{ id:"u7", title:"Scam Shield", desc:"Tips, finfluencers and pump-and-dump schemes", lessons:[
+  { id:"u7l1", title:"Spot the scam", items:[
+    { t:"teach", h:"If it sounds too good, it is", b:"<ul><li>Only <b>SEBI-registered</b> Investment Advisers (RIA) and Research Analysts (RA) may give paid advice. Check their number on SEBI’s website.</li><li>“Guaranteed returns” in equity are a red flag.</li><li>Telegram and WhatsApp “tip groups” often run <b>pump-and-dump</b> schemes.</li><li>Complain about a registered entity on <b>SEBI SCORES</b>.</li></ul>" },
+    { t:"mcq", q:"A WhatsApp group promises “guaranteed 5% returns every month” from stock trading. What is this?", o:["A red flag for fraud","A good deal if the admin is confident","Normal for algo trading","Safe if they show screenshots"], a:0, w:"5% a month is about 80% a year, guaranteed. No legitimate equity product promises that." },
+    { t:"mcq", q:"How can you check if an adviser is allowed to give paid stock advice?", o:["Look them up in SEBI’s registered intermediaries list","Count their Instagram followers","Ask for a profit screenshot","Check if they have a blue tick"], a:0, w:"A SEBI registration number can be verified in minutes." },
+    { t:"tf", q:"A finfluencer with 10 lakh followers must be SEBI-registered.", a:false, w:"Followers prove nothing. Many popular accounts are not registered and cannot legally give paid advice." },
+    { t:"order", q:"Put the stages of a pump-and-dump in order.", o:["Operators quietly buy a tiny stock","They hype it in Telegram and WhatsApp groups","Retail investors pile in and the price jumps","Operators sell their shares at the top","The price crashes and late buyers are stuck"], w:"Recognise stage two and you never reach stage five." },
+    { t:"mcq", q:"Your broker hasn’t resolved a complaint in 30 days. Where do you escalate?", o:["SEBI SCORES","The stock exchange’s Twitter account","Your bank","A consumer forum on Telegram"], a:0, w:"SCORES is SEBI’s official complaint system. You can also use the exchange’s investor grievance cell and ODR." }
+  ]}
+]}
+];
+
+/* flatten + ids */
+const LESSONS = [];
+UNITS.forEach((u, ui) => u.lessons.forEach((l, li) => {
+  l.unit = u; l.ui = ui; l.li = li;
+  l.items.forEach((it, k) => { it.id = l.id + ":" + k; it.lessonId = l.id; });
+  LESSONS.push(l);
+}));
+const ITEM_BY_ID = {};
+LESSONS.forEach(l => l.items.forEach(it => ITEM_BY_ID[it.id] = it));
+
+/* ================= state ================= */
+const KEY = "dalal-streak-v1";
+const MAX_HEARTS = 5, REFILL_MS = 30 * 60 * 1000;
+const fresh = () => ({ xp: 0, streak: 0, best: 0, lastDay: null, hearts: MAX_HEARTS, heartsAt: null, done: {}, mistakes: [], daily: {}, goal: 30, perfects: 0, sound: true });
+let S = fresh();
+try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(fresh(), JSON.parse(raw)); } catch (e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+function ymd(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+function dayOffset(n) { const d = new Date(); d.setDate(d.getDate() + n); return ymd(d); }
+const today = () => dayOffset(0);
+function liveStreak() { return (S.lastDay === today() || S.lastDay === dayOffset(-1)) ? S.streak : 0; }
+function bumpStreak() {
+  const t = today(); if (S.lastDay === t) return;
+  S.streak = S.lastDay === dayOffset(-1) ? S.streak + 1 : 1;
+  S.lastDay = t; S.best = Math.max(S.best, S.streak);
+}
+function refreshHearts() {
+  if (S.hearts >= MAX_HEARTS) { S.hearts = MAX_HEARTS; S.heartsAt = null; return; }
+  const now = Date.now(); if (!S.heartsAt) S.heartsAt = now;
+  const n = Math.floor((now - S.heartsAt) / REFILL_MS);
+  if (n > 0) { S.hearts = Math.min(MAX_HEARTS, S.hearts + n); S.heartsAt = S.hearts >= MAX_HEARTS ? null : S.heartsAt + n * REFILL_MS; save(); }
+}
+function nextHeartIn() { if (!S.heartsAt) return 0; return Math.max(0, REFILL_MS - (Date.now() - S.heartsAt)); }
+const fmtINR = n => Number(n).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+const mmss = ms => { const s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const $ = id => document.getElementById(id);
+
+function isUnlocked(i) { return i === 0 || !!S.done[LESSONS[i - 1].id]; }
+function currentIndex() { const i = LESSONS.findIndex(l => !S.done[l.id]); return i; }
+
+/* ================= sound ================= */
+let AC = null;
+function tone(seq) {
+  if (!S.sound) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    let t = AC.currentTime;
+    seq.forEach(([f, d]) => {
+      const o = AC.createOscillator(), g = AC.createGain();
+      o.type = "triangle"; o.frequency.value = f; o.connect(g); g.connect(AC.destination);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.18, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      o.start(t); o.stop(t + d + 0.02); t += d * 0.8;
+    });
+  } catch (e) {}
+}
+const sfx = { good: () => tone([[660, .12], [990, .2]]), bad: () => tone([[220, .18], [180, .22]]), win: () => tone([[523, .12], [659, .12], [784, .12], [1047, .3]]) };
+
+/* ================= badges ================= */
+const unitDone = uid => UNITS.find(u => u.id === uid).lessons.every(l => S.done[l.id]);
+const BADGES = [
+  { id: "first", name: "Opening Bell", d: "Finish your first lesson", ic: I.star, ok: () => Object.keys(S.done).length >= 1 },
+  { id: "streak3", name: "On a Roll", d: "Reach a 3-day streak", ic: I.flame, ok: () => S.best >= 3 },
+  { id: "xp100", name: "Century", d: "Earn 100 XP", ic: I.bolt, ok: () => S.xp >= 100 },
+  { id: "perfect", name: "Flawless", d: "Finish a lesson with no mistakes", ic: I.check, ok: () => S.perfects >= 1 },
+  { id: "u2", name: "Safe Saver", d: "Complete Safe Savings", ic: I.rupee, ok: () => unitDone("u2") },
+  { id: "u3", name: "Dalal Debut", d: "Complete Stock Market Basics", ic: I.chart, ok: () => unitDone("u3") },
+  { id: "u4", name: "SIP Starter", d: "Complete Mutual Funds and SIPs", ic: I.shuffle, ok: () => unitDone("u4") },
+  { id: "u5", name: "Tax Smart", d: "Complete Tax Smart", ic: I.book, ok: () => unitDone("u5") },
+  { id: "u6", name: "Risk Aware", d: "Complete Trading and Risk", ic: I.target, ok: () => unitDone("u6") },
+  { id: "u7", name: "Scam Shield", d: "Complete Scam Shield", ic: I.shield, ok: () => unitDone("u7") },
+  { id: "all", name: "Graduate", d: "Finish every lesson", ic: I.trophy, ok: () => LESSONS.every(l => S.done[l.id]) }
+];
+const earned = () => BADGES.filter(b => b.ok()).map(b => b.id);
+
+/* ================= top bar + learn view ================= */
+function renderStats() {
+  refreshHearts();
+  const st = liveStreak();
+  $("st-streak").innerHTML = I.flame + "<span>" + st + "</span>";
+  $("st-streak").classList.toggle("off", st === 0);
+  $("st-xp").innerHTML = I.bolt + "<span>" + S.xp + "</span>";
+  $("st-hearts").innerHTML = I.heart + "<span>" + S.hearts + "</span>";
+  $("st-hearts").classList.toggle("off", S.hearts === 0);
+  const dx = S.daily[today()] || 0;
+  $("goal-sub").textContent = dx >= S.goal ? "Goal met today. Keep the streak alive tomorrow." : (S.goal - dx) + " XP to go today";
+  $("goal-title").innerHTML = "Daily goal <span class='num' style='color:var(--muted);font-weight:600'>" + Math.min(dx, S.goal) + " / " + S.goal + " XP</span>";
+  $("goal-bar").style.width = Math.min(100, 100 * dx / S.goal) + "%";
+}
+
+const OFFS = [0, 46, 70, 46, 0, -46, -70, -46];
+function renderPath() {
+  const cur = currentIndex();
+  let gi = 0, html = "";
+  UNITS.forEach((u, ui) => {
+    const color = "var(--u" + (ui + 1) + ")";
+    const firstIdx = LESSONS.indexOf(u.lessons[0]);
+    const locked = !isUnlocked(firstIdx);
+    html += '<section class="unit' + (locked ? " locked" : "") + '"><div class="unit-head" style="--c:' + color + '"><div class="t"><small>Unit ' + (ui + 1) + '</small><h2>' + u.title + '</h2><p>' + u.desc + '</p></div><button class="guide-btn" data-guide="' + u.id + '">' + "Guide" + '</button></div><div class="path">';
+    u.lessons.forEach(l => {
+      const i = LESSONS.indexOf(l);
+      const done = !!S.done[l.id], unlocked = isUnlocked(i), isCur = i === cur;
+      const cls = done ? "done" : unlocked ? "" : "locked";
+      const icon = done ? I.check : unlocked ? I.star : I.lock;
+      html += '<div class="node-wrap" style="transform:translateX(' + OFFS[gi % OFFS.length] + 'px);--c:' + color + '">' +
+        (isCur ? '<div class="bubble">' + (Object.keys(S.done).length ? "Next" : "Start") + '</div>' : "") +
+        '<button class="node ' + cls + (isCur ? " current" : "") + '" style="--c:' + color + '" data-lesson="' + i + '" aria-label="' + l.title + (done ? ", completed" : unlocked ? "" : ", locked") + '">' + icon + '</button>' +
+        '<div class="node-label">' + l.title + '</div></div>';
+      gi++;
+    });
+    html += "</div></section>";
+  });
+  $("path").innerHTML = html;
+}
+
+const TICKS = [["NIFTY 50", 25124.6, 0.42], ["SENSEX", 82190.3, 0.38], ["BANKNIFTY", 55410.2, -0.21], ["RELIANCE", 1398.5, 0.9], ["HDFCBANK", 1972.1, -0.35], ["TCS", 3084.0, 1.12], ["INFY", 1512.8, -0.6], ["ITC", 408.2, 0.18], ["SBIN", 842.7, 0.74], ["USD/INR", 87.92, 0.05], ["GOLD 10g", 98450, -0.3]];
+function renderTicker() {
+  const one = TICKS.map(([s, p, c]) => s + " <span class='" + (c >= 0 ? "up" : "dn") + "'>" + fmtINR(p) + " " + (c >= 0 ? "▲" : "▼") + Math.abs(c).toFixed(2) + "%</span>").join(" &nbsp;·&nbsp; ");
+  $("ticker").innerHTML = one + " &nbsp;·&nbsp; " + one + " &nbsp;·&nbsp; ";
+}
+
+/* ================= practice view ================= */
+function reviewPool() { return LESSONS.filter(l => S.done[l.id]).flatMap(l => l.items.filter(it => it.t !== "teach" && it.t !== "match")); }
+function renderPractice() {
+  const m = S.mistakes.filter(id => ITEM_BY_ID[id]).length;
+  const pool = reviewPool().length;
+  $("v-practice").innerHTML =
+    '<h2 class="h-sec">Practice</h2><p style="margin:0 0 16px;color:var(--muted)">Practice never costs hearts. Each finished session earns 10 XP and one heart back.</p>' +
+    '<div class="stack">' +
+    '<div class="card practice-card"><div class="ic" style="background:var(--bad)">' + I.target + '</div><div class="meta"><b>Fix your mistakes</b><small>' + (m ? m + " question" + (m > 1 ? "s" : "") + " you got wrong" : "Nothing to fix yet. Questions you miss land here.") + '</small></div><button class="btn warn" data-practice="mistakes"' + (m ? "" : " disabled") + '>Start</button></div>' +
+    '<div class="card practice-card"><div class="ic" style="background:var(--u2)">' + I.shuffle + '</div><div class="meta"><b>Mixed review</b><small>' + (pool ? "8 random questions from lessons you’ve finished" : "Finish a lesson to unlock review") + '</small></div><button class="btn" style="--c:var(--u2)" data-practice="mixed"' + (pool ? "" : " disabled") + '>Start</button></div>' +
+    '</div>' +
+    '<h2 class="h-sec">Cheat sheet</h2><div class="stack">' +
+    UNITS.map((u, ui) => '<button class="card practice-card" style="text-align:left;width:100%" data-guide="' + u.id + '"><div class="ic" style="background:var(--u' + (ui + 1) + ')">' + I.book + '</div><div class="meta"><b>' + u.title + '</b><small>' + u.desc + '</small></div></button>').join("") +
+    '</div>';
+}
+
+/* ================= profile view ================= */
+function renderProfile() {
+  const done = Object.keys(S.done).length;
+  const got = earned();
+  const days = [];
+  for (let k = -6; k <= 0; k++) {
+    const d = new Date(); d.setDate(d.getDate() + k);
+    const x = S.daily[ymd(d)] || 0;
+    days.push('<div><span>' + "SMTWTFS"[d.getDay()] + '</span><i class="' + (x >= S.goal ? "hit" : x > 0 ? "part" : "") + (k === 0 ? " today" : "") + '" title="' + x + ' XP">' + (x >= S.goal ? I.check.replace('stroke-width="3.4"', 'stroke-width="3.4" width="16" height="16"') : "") + '</i></div>');
+  }
+  $("v-profile").innerHTML =
+    '<h2 class="h-sec">Your progress</h2>' +
+    '<div class="tiles">' +
+    '<div class="card tile" style="color:var(--flame)">' + I.flame + '<div><b style="color:var(--ink)">' + liveStreak() + '</b><small>Day streak · best ' + S.best + '</small></div></div>' +
+    '<div class="card tile" style="color:var(--bolt)">' + I.bolt + '<div><b style="color:var(--ink)">' + S.xp + '</b><small>Total XP</small></div></div>' +
+    '<div class="card tile" style="color:var(--brand)">' + I.book + '<div><b style="color:var(--ink)">' + done + '<span style="font-size:14px;color:var(--muted)"> / ' + LESSONS.length + '</span></b><small>Lessons done</small></div></div>' +
+    '<div class="card tile" style="color:var(--u7)">' + I.trophy + '<div><b style="color:var(--ink)">' + got.length + '<span style="font-size:14px;color:var(--muted)"> / ' + BADGES.length + '</span></b><small>Badges</small></div></div>' +
+    '</div>' +
+    '<h2 class="h-sec">This week</h2><div class="card"><div class="week">' + days.join("") + '</div></div>' +
+    '<h2 class="h-sec">Badges</h2><div class="badges">' +
+    BADGES.map(b => '<div class="badge' + (got.includes(b.id) ? "" : " off") + '"><div class="medal">' + b.ic + '</div><b>' + b.name + '</b><small>' + b.d + '</small></div>').join("") +
+    '</div>' +
+    '<h2 class="h-sec">Settings</h2><div class="card">' +
+    '<div class="setting" style="display:grid"><b>Daily goal</b><div class="chips">' +
+    [[10, "Casual"], [20, "Regular"], [30, "Serious"], [50, "Intense"]].map(([g, n]) => '<button class="chip" data-goal="' + g + '" aria-pressed="' + (S.goal === g) + '">' + n + ' · ' + g + ' XP</button>').join("") + '</div></div>' +
+    '<div class="setting"><b>Sound effects</b><button class="chip" id="sound-t" aria-pressed="' + S.sound + '">' + (S.sound ? "On" : "Off") + '</button></div>' +
+    '<div class="setting"><div><b>Reset progress</b><br><small style="color:var(--muted)">Clears XP, streak and lessons on this device</small></div><button class="chip" id="reset-btn" style="color:var(--bad)">Reset</button></div>' +
+    '</div>';
+}
+
+/* ================= tabs ================= */
+let TAB = "learn";
+function showTab(t) {
+  TAB = t;
+  document.querySelectorAll(".tab").forEach(b => b.toggleAttribute("aria-current", false));
+  document.querySelector('.tab[data-tab="' + t + '"]').setAttribute("aria-current", "page");
+  ["learn", "practice", "profile"].forEach(v => $("v-" + v).hidden = v !== t);
+  renderAll(); window.scrollTo(0, 0);
+}
+function renderAll() {
+  renderStats();
+  if (TAB === "learn") renderPath();
+  if (TAB === "practice") renderPractice();
+  if (TAB === "profile") renderProfile();
+}
+
+/* ================= modal + toast ================= */
+function openModal(html) { $("sheet").innerHTML = html; $("modal").hidden = false; const f = $("sheet").querySelector("button"); if (f) f.focus(); }
+function closeModal() { $("modal").hidden = true; }
+$("modal").addEventListener("click", e => { if (e.target === $("modal")) closeModal(); });
+let toastT;
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2200); }
+
+function openGuide(uid) {
+  const u = UNITS.find(x => x.id === uid);
+  const cards = u.lessons.flatMap(l => l.items.filter(it => it.t === "teach"));
+  openModal('<h3>' + u.title + ' guide</h3><p>The key ideas from this unit, in one place.</p>' +
+    cards.map(c => '<hr><div class="teach">' + (c.term ? '<span class="term">' + c.term + '</span>' : "") + '<h3 style="font-size:18px">' + c.h + '</h3>' + c.b + (c.ex ? '<div class="example">' + c.ex + '</div>' : "") + '</div>').join("") +
+    '<button class="btn" data-close>Close</button>');
+}
+
+function openLessonSheet(i) {
+  const l = LESSONS[i];
+  if (!isUnlocked(i)) { toast("Finish the lesson before this one to unlock it"); return; }
+  const qn = l.items.filter(it => it.t !== "teach").length;
+  const done = !!S.done[l.id];
+  openModal('<span class="term" style="color:var(--u' + (l.ui + 1) + ');background:color-mix(in srgb, var(--u' + (l.ui + 1) + ') 12%, transparent)">Unit ' + (l.ui + 1) + ' · Lesson ' + (l.li + 1) + ' of ' + l.unit.lessons.length + '</span>' +
+    '<h3>' + l.title + '</h3><p>' + qn + ' questions · ' + (done ? "Review for +5 XP" : "+10 XP, +5 for a perfect run") + (done ? " · best accuracy " + S.done[l.id].acc + "%" : "") + '</p>' +
+    '<button class="btn" style="--c:var(--u' + (l.ui + 1) + ')" data-start="' + i + '">' + (done ? "Review lesson" : "Start lesson") + '</button>' +
+    '<button class="btn ghost" data-close>Not now</button>');
+}
+
+/* ================= lesson engine ================= */
+let L = null;
+function startLesson(i) {
+  refreshHearts();
+  if (S.hearts <= 0) { noHeartsModal(); return; }
+  const l = LESSONS[i];
+  beginSession({ mode: "lesson", lesson: l, items: l.items.slice() });
+}
+function startPractice(kind) {
+  let items;
+  if (kind === "mistakes") items = shuffle(S.mistakes.map(id => ITEM_BY_ID[id]).filter(Boolean)).slice(0, 10);
+  else items = shuffle(reviewPool()).slice(0, 8);
+  if (!items.length) { toast("Nothing to practice yet"); return; }
+  beginSession({ mode: "practice", kind, items });
+}
+function beginSession(o) {
+  closeModal();
+  L = { mode: o.mode, kind: o.kind, lesson: o.lesson, queue: o.items.map(it => Object.assign({}, it)), idx: 0, total: o.items.length,
+        done: 0, questions: o.items.filter(it => it.t !== "teach").length, firstMiss: new Set(), combo: 0, t0: Date.now(), phase: "answer" };
+  $("lesson").hidden = false; document.body.style.overflow = "hidden";
+  renderItem();
+}
+function endSession() { L = null; $("lesson").hidden = true; document.body.style.overflow = ""; renderAll(); }
+
+function setProg() { $("l-prog").style.width = (100 * L.done / L.total) + "%"; $("l-hearts").innerHTML = L.mode === "lesson" ? I.heart + "<span>" + S.hearts + "</span>" : '<span style="font-size:12px;color:var(--muted);font-family:var(--f-body)">PRACTICE</span>'; }
+function resetFoot() { $("l-foot").className = "l-foot gut"; $("fb-title").innerHTML = ""; $("fb-ans").textContent = ""; $("fb-why").textContent = ""; }
+function setCheck(label, enabled) { const b = $("l-check"); b.textContent = label; b.disabled = !enabled; b.hidden = false; }
+
+const KICK = { mcq: "Choose the right answer", tf: "True or false?", num: "Work it out", cloze: "Fill in the blank", match: "Tap the matching pairs", order: "Put these in order" };
+function renderItem() {
+  const it = L.queue[L.idx];
+  L.phase = it.t === "teach" ? "teach" : "answer"; L.sel = null; L.opts = null;
+  resetFoot(); setProg();
+  const body = $("l-body");
+  const kick = it.t === "teach" ? '<div class="kicker">New concept</div>' :
+    '<div class="kicker">' + (it._retry ? "Previous mistake · " : "") + KICK[it.t] + (L.combo >= 3 ? ' <span class="combo">· ' + L.combo + ' in a row</span>' : "") + '</div>';
+  let h = '<div class="col">' + kick;
+  if (it.t === "teach") {
+    h += '<div class="teach">' + (it.term ? '<span class="term">' + it.term + '</span>' : "") + '<h3>' + it.h + '</h3>' + it.b + (it.ex ? '<div class="example">' + it.ex + '</div>' : "") + '</div>';
+    setCheck("Got it", true);
+  } else if (it.t === "mcq" || it.t === "tf") {
+    L.opts = it.t === "tf" ? [{ x: "True", ok: it.a === true }, { x: "False", ok: it.a === false }] : shuffle(it.o.map((x, k) => ({ x, ok: k === it.a })));
+    h += '<div class="q">' + it.q + '</div><div class="opts' + (it.t === "tf" ? " tf" : "") + '">' +
+      L.opts.map((o, k) => '<button class="opt" data-opt="' + k + '" aria-pressed="false"><span class="k">' + (k + 1) + '</span><span>' + o.x + '</span></button>').join("") + '</div>';
+    setCheck("Check", false);
+  } else if (it.t === "cloze") {
+    L.opts = shuffle(it.o.map((x, k) => ({ x, ok: k === it.a })));
+    h += '<div class="cloze">' + it.s.replace("___", '<span class="blank empty" id="blank">____</span>') + '</div><div class="bank">' +
+      L.opts.map((o, k) => '<button class="opt" data-opt="' + k + '" aria-pressed="false"><span class="k">' + (k + 1) + '</span><span>' + o.x + '</span></button>').join("") + '</div>';
+    setCheck("Check", false);
+  } else if (it.t === "num") {
+    h += '<div class="q">' + it.q + '</div><label class="numwrap">' + (it.pre ? '<span>' + it.pre + '</span>' : "") +
+      '<input id="num-in" inputmode="decimal" autocomplete="off" placeholder="Your answer" aria-label="Your answer"></label><div class="hint">Commas are fine, like 1,50,000.</div>';
+    setCheck("Check", false);
+  } else if (it.t === "order") {
+    L.sel = []; L.bank = shuffle(it.o.map((x, k) => k));
+    h += '<div class="q">' + it.q + '</div><div class="order-ans" id="ord-ans"></div><div class="opts" id="ord-bank"></div>';
+    setCheck("Check", false);
+  } else if (it.t === "match") {
+    L.left = shuffle(it.p.map((p, k) => k)); L.right = shuffle(it.p.map((p, k) => k)); L.pick = null; L.matched = 0; L.matchErr = 0;
+    h += '<div class="q">Match each term to its meaning</div><div class="match">' +
+      L.left.map((k, r) => '<button class="opt" data-side="l" data-k="' + k + '" style="grid-column:1;grid-row:' + (r + 1) + '">' + it.p[k][0] + '</button>' +
+        '<button class="opt" data-side="r" data-k="' + L.right[r] + '" style="grid-column:2;grid-row:' + (r + 1) + '">' + it.p[L.right[r]][1] + '</button>').join("") + '</div>';
+    $("l-check").hidden = true;
+  }
+  h += "</div>";
+  body.innerHTML = h; body.scrollTop = 0;
+  if (it.t === "order") renderOrder();
+  if (it.t === "num") { const inp = $("num-in"); inp.addEventListener("input", () => { $("l-check").disabled = parseNum(inp.value) === null; }); setTimeout(() => inp.focus(), 50); }
+}
+function parseNum(s) { s = String(s).replace(/[₹,\s]/g, "").replace(/lakh|lac/i, "e5").replace(/crore|cr/i, "e7"); if (!s) return null; const v = Number(s); return isFinite(v) ? v : null; }
+function renderOrder() {
+  const it = L.queue[L.idx];
+  $("ord-ans").innerHTML = L.sel.map((k, n) => '<button class="opt" data-ord-rm="' + n + '"><span class="k">' + (n + 1) + '</span><span>' + it.o[k] + '</span></button>').join("");
+  $("ord-bank").innerHTML = L.bank.filter(k => !L.sel.includes(k)).map(k => '<button class="opt" data-ord-add="' + k + '"><span class="k">·</span><span>' + it.o[k] + '</span></button>').join("");
+  $("l-check").disabled = L.sel.length !== it.o.length;
+}
+
+function selectOpt(k) {
+  if (L.phase !== "answer") return;
+  L.sel = k;
+  document.querySelectorAll("#l-body [data-opt]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.opt === k)));
+  const blank = $("blank"); if (blank) { blank.textContent = L.opts[k].x; blank.classList.remove("empty"); }
+  $("l-check").disabled = false;
+}
+
+function check() {
+  const it = L.queue[L.idx];
+  let ok = false, ans = "";
+  if (it.t === "mcq" || it.t === "tf" || it.t === "cloze") {
+    if (L.sel === null) return;
+    ok = L.opts[L.sel].ok; const ri = L.opts.findIndex(o => o.ok); ans = L.opts[ri].x;
+    document.querySelectorAll("#l-body [data-opt]").forEach(b => { const k = +b.dataset.opt; b.disabled = true; if (k === ri) b.classList.add("right"); else if (k === L.sel) b.classList.add("wrong"); });
+  } else if (it.t === "num") {
+    const v = parseNum($("num-in").value); if (v === null) return;
+    const tol = it.tol != null ? it.tol : Math.max(0.01, Math.abs(it.a) * 0.001);
+    ok = Math.abs(v - it.a) <= tol; ans = (it.pre || "") + fmtINR(it.a);
+    $("num-in").disabled = true;
+  } else if (it.t === "order") {
+    ok = L.sel.every((k, n) => k === n); ans = it.o.map((x, n) => (n + 1) + ". " + x).join("  ");
+    document.querySelectorAll("#ord-ans .opt").forEach((b, n) => { b.disabled = true; b.classList.add(L.sel[n] === n ? "right" : "wrong"); });
+  }
+  grade(ok, it, ans);
+}
+
+const PRAISE = ["Nicely done!", "Correct!", "Spot on!", "Shabash!", "Bang on!", "Great work!"];
+function grade(ok, it, ans) {
+  L.phase = "feedback";
+  const foot = $("l-foot");
+  if (ok) {
+    L.done++; L.combo++;
+    if (L.mode === "practice") S.mistakes = S.mistakes.filter(id => id !== it.id);
+    foot.classList.add("good");
+    $("fb-title").innerHTML = I.check + PRAISE[Math.floor(Math.random() * PRAISE.length)];
+    $("fb-ans").textContent = "";
+    sfx.good();
+  } else {
+    L.combo = 0; L.firstMiss.add(it.id);
+    if (L.mode === "lesson") { S.hearts = Math.max(0, S.hearts - 1); if (!S.heartsAt) S.heartsAt = Date.now(); }
+    if (!S.mistakes.includes(it.id)) S.mistakes.push(it.id);
+    L.queue.push(Object.assign({}, it, { _retry: true }));
+    foot.classList.add("bad");
+    $("fb-title").innerHTML = I.x + "Not quite";
+    $("fb-ans").textContent = "Correct answer: " + ans;
+    sfx.bad();
+  }
+  $("fb-why").textContent = it.w || "";
+  save(); setProg();
+  setCheck("Continue", true); $("l-check").focus();
+}
+
+function nextItem() {
+  if (L.mode === "lesson" && S.hearts <= 0) { outOfHeartsInLesson(); return; }
+  L.idx++;
+  if (L.idx >= L.queue.length) finish(); else renderItem();
+}
+
+function matchTap(btn) {
+  if (L.phase !== "answer" || btn.classList.contains("done")) return;
+  const it = L.queue[L.idx];
+  if (!L.pick || L.pick.dataset.side === btn.dataset.side) {
+    if (L.pick) L.pick.setAttribute("aria-pressed", "false");
+    L.pick = btn; btn.setAttribute("aria-pressed", "true"); return;
+  }
+  const a = L.pick, b = btn; L.pick = null; a.setAttribute("aria-pressed", "false");
+  if (a.dataset.k === b.dataset.k) {
+    [a, b].forEach(x => { x.classList.add("done"); x.disabled = true; });
+    L.matched++; tone([[700 + L.matched * 80, .1]]);
+    if (L.matched === it.p.length) {
+      if (L.matchErr === 0) grade(true, it, "");
+      else { // count as done but note it for review, no heart lost
+        L.done++; L.combo = 0; L.firstMiss.add(it.id); L.phase = "feedback";
+        if (!S.mistakes.includes(it.id)) S.mistakes.push(it.id);
+        $("l-foot").classList.add("good");
+        $("fb-title").innerHTML = I.check + "All matched";
+        $("fb-ans").textContent = L.matchErr + " wrong tap" + (L.matchErr > 1 ? "s" : "") + ". This set is saved to Practice.";
+        $("fb-why").textContent = it.w || ""; save(); setProg(); setCheck("Continue", true); sfx.good();
+      }
+    }
+  } else {
+    L.matchErr++;
+    [a, b].forEach(x => { x.classList.remove("flash"); void x.offsetWidth; x.classList.add("flash"); setTimeout(() => x.classList.remove("flash"), 400); });
+    tone([[200, .12]]);
+  }
+}
+
+function finish() {
+  const before = earned();
+  const secs = Math.round((Date.now() - L.t0) / 1000);
+  const acc = L.questions ? Math.round(100 * (L.questions - L.firstMiss.size) / L.questions) : 100;
+  let xp, sub;
+  if (L.mode === "lesson") {
+    const again = !!S.done[L.lesson.id];
+    xp = (again ? 5 : 10) + (L.firstMiss.size === 0 ? 5 : 0);
+    if (L.firstMiss.size === 0) S.perfects++;
+    S.done[L.lesson.id] = { acc: Math.max(acc, again ? S.done[L.lesson.id].acc : 0), at: Date.now() };
+    sub = L.lesson.title;
+  } else {
+    xp = 10; S.hearts = Math.min(MAX_HEARTS, S.hearts + 1); if (S.hearts >= MAX_HEARTS) S.heartsAt = null;
+    sub = L.kind === "mistakes" ? "Mistakes reviewed" : "Mixed review";
+  }
+  S.xp += xp; S.daily[today()] = (S.daily[today()] || 0) + xp; bumpStreak(); save();
+  const newBadges = earned().filter(id => !before.includes(id)).map(id => BADGES.find(b => b.id === id));
+  L.phase = "complete"; resetFoot(); $("l-prog").style.width = "100%";
+  $("l-body").innerHTML = '<div class="col done-screen"><div class="trophy">' + I.trophy + '</div><h2>' + (L.mode === "lesson" ? "Lesson complete!" : "Practice complete!") + '</h2><p>' + sub + (L.mode === "practice" ? " · +1 heart" : "") + '</p>' +
+    '<div class="done-tiles"><div class="dt"><small>Total XP</small><b>+' + xp + '</b></div><div class="dt" style="--c:var(--good)"><small>Accuracy</small><b>' + acc + '%</b></div><div class="dt" style="--c:var(--u2)"><small>Time</small><b>' + mmss(secs * 1000) + '</b></div></div>' +
+    '<div class="card new-badge"><span style="color:var(--flame);width:34px;height:34px;flex:none">' + I.flame + '</span><div><b>' + liveStreak() + ' day streak</b><br><small style="color:var(--muted)">' + ((S.daily[today()] || 0) >= S.goal ? "Daily goal met" : (S.goal - (S.daily[today()] || 0)) + " XP left for today’s goal") + '</small></div></div>' +
+    newBadges.map(b => '<div class="card new-badge"><div class="badge"><div class="medal">' + b.ic + '</div></div><div><b>Badge unlocked: ' + b.name + '</b><br><small style="color:var(--muted)">' + b.d + '</small></div></div>').join("") +
+    '</div>';
+  setCheck("Continue", true);
+  sfx.win(); confetti();
+}
+
+function outOfHeartsInLesson() {
+  L.phase = "nohearts"; resetFoot();
+  $("l-body").innerHTML = '<div class="col done-screen"><div class="trophy" style="color:var(--heart)">' + I.heart + '</div><h2 style="color:var(--heart)">Out of hearts</h2><p>A new heart arrives in <b class="num" id="heart-clock">' + mmss(nextHeartIn()) + '</b>. Or finish a practice session to earn one back now.</p>' +
+    '<div class="stack" style="width:100%"><button class="btn" data-practice="' + (S.mistakes.length ? "mistakes" : "mixed") + '">Practice to earn a heart</button></div></div>';
+  setCheck("Back to lessons", true);
+}
+function noHeartsModal() {
+  openModal('<h3>You’re out of hearts</h3><p>A new heart arrives in <b class="num">' + mmss(nextHeartIn()) + '</b>. Practice never costs hearts, and each session earns one back.</p>' +
+    '<button class="btn" data-practice="' + (S.mistakes.length ? "mistakes" : "mixed") + '"' + (S.mistakes.length || reviewPool().length ? "" : " disabled") + '>Practice to earn a heart</button><button class="btn ghost" data-close>Not now</button>');
+}
+
+/* ================= confetti ================= */
+function confetti() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const c = $("confetti"); c.hidden = false;
+  const ctx = c.getContext("2d"), W = c.width = innerWidth, H = c.height = innerHeight;
+  const cs = getComputedStyle(document.documentElement);
+  const cols = ["--saffron", "--brand", "--u2", "--u4", "--bolt", "--u7"].map(v => cs.getPropertyValue(v).trim());
+  const P = Array.from({ length: 110 }, () => ({ x: W / 2, y: H * 0.35, vx: (Math.random() - .5) * 14, vy: Math.random() * -13 - 3, r: Math.random() * 6 + 4, c: cols[Math.floor(Math.random() * cols.length)], a: Math.random() * 6, s: (Math.random() - .5) * .3 }));
+  let f = 0;
+  (function step() {
+    ctx.clearRect(0, 0, W, H);
+    P.forEach(p => { p.vy += .35; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.a += p.s; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillStyle = p.c; ctx.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2); ctx.restore(); });
+    if (++f < 110) requestAnimationFrame(step); else { ctx.clearRect(0, 0, W, H); c.hidden = true; }
+  })();
+}
+
+/* ================= events ================= */
+document.addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.dataset.tab) return showTab(t.dataset.tab);
+  if (t.dataset.lesson != null) return openLessonSheet(+t.dataset.lesson);
+  if (t.dataset.start != null) return startLesson(+t.dataset.start);
+  if (t.dataset.guide) return openGuide(t.dataset.guide);
+  if (t.dataset.practice) { if (L) { L = null; $("lesson").hidden = true; } return startPractice(t.dataset.practice); }
+  if (t.hasAttribute("data-close")) return closeModal();
+  if (t.dataset.goal) { S.goal = +t.dataset.goal; save(); return renderAll(); }
+  if (t.id === "sound-t") { S.sound = !S.sound; save(); return renderAll(); }
+  if (t.id === "reset-btn") return openModal('<h3>Reset all progress?</h3><p>This clears your XP, streak, badges and finished lessons on this device. It can’t be undone.</p><button class="btn warn" id="reset-yes">Reset progress</button><button class="btn ghost" data-close>Keep my progress</button>');
+  if (t.id === "reset-yes") { const g = S.goal, snd = S.sound; S = fresh(); S.goal = g; S.sound = snd; save(); closeModal(); toast("Progress reset"); return renderAll(); }
+  if (!L) return;
+  if (t.dataset.opt != null) return selectOpt(+t.dataset.opt);
+  if (t.dataset.side) return matchTap(t);
+  if (t.dataset.ordAdd != null) { L.sel.push(+t.dataset.ordAdd); return renderOrder(); }
+  if (t.dataset.ordRm != null && L.phase === "answer") { L.sel.splice(+t.dataset.ordRm, 1); return renderOrder(); }
+  if (t.id === "l-check") {
+    if (L.phase === "answer") return check();
+    if (L.phase === "teach") { L.done++; return nextItem(); }
+    if (L.phase === "feedback") return nextItem();
+    if (L.phase === "complete" || L.phase === "nohearts") return endSession();
+  }
+  if (t.id === "l-close") {
+    if (L.phase === "complete" || L.phase === "nohearts") return endSession();
+    return openModal('<h3>Quit this ' + (L.mode === "lesson" ? "lesson" : "practice") + '?</h3><p>You’ll lose your progress in it. Hearts you’ve lost stay lost.</p><button class="btn" data-close>Keep learning</button><button class="btn ghost warn" id="quit-yes" style="color:var(--bad)">Quit</button>');
+  }
+  if (t.id === "quit-yes") { closeModal(); return endSession(); }
+});
+
+document.addEventListener("keydown", e => {
+  if (!$("modal").hidden) { if (e.key === "Escape") closeModal(); return; }
+  if (!L) return;
+  if (e.key === "Enter" && !$("l-check").disabled && !$("l-check").hidden) { e.preventDefault(); $("l-check").click(); return; }
+  if (L.phase === "answer" && /^[1-9]$/.test(e.key) && L.opts && document.activeElement.id !== "num-in") {
+    const k = +e.key - 1; if (document.querySelector('#l-body [data-opt="' + k + '"]')) selectOpt(k);
+  }
+});
+
+setInterval(() => {
+  const before = S.hearts; refreshHearts();
+  if (S.hearts !== before && !L) renderStats();
+  const hc = $("heart-clock"); if (hc) hc.textContent = mmss(nextHeartIn());
+}, 1000);
+
+renderTicker();
+renderAll();
+</script>
+</body>
+</html>
