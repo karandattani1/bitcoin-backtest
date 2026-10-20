@@ -144,9 +144,20 @@ pip install yt-dlp youtube-transcript-api google-api-python-client faster-whispe
 # plus: ffmpeg (brew/apt), optional tesseract-ocr
 ```
 
-## What I need from you to build it
+## Implementation
 
-1. **The channel list** (URLs or @handles).
-2. **A YouTube Data API key**, or confirmation that `yt-dlp` is fine for discovery.
-3. **Whether you'll run the fetch steps locally.** I'll write `scripts/yt_fetch.py`, which you run at home, and
-   `scripts/yt_extract.py`, which runs here on the committed transcripts.
+This plan is built in [`scripts/youtube/`](../scripts/youtube/README.md):
+- `yt_fetch.py` covers steps 1–3. It lists videos with `yt-dlp` (no API key needed), filters titles, and fetches captions, with Whisper as a fallback.
+- `yt_extract.py` is step 5, using Claude structured output.
+- `yt_catalog.py` covers steps 6–7.
+
+The frame/OCR step (4) is not built yet. Add it once `missing_for_backtest` shows which videos need it.
+
+### Channels and what to expect
+
+| Channel | Notes |
+|---|---|
+| @Definedge | Indian broker and education channel: Renko / point & figure, options, and trading-system webinars. Long webinars, mixed Hindi and English. |
+| @Elearnmarkets | Indian education channel, including interviews where traders describe their setups. Lots of Hindi and Hinglish. Many videos are interviews, so expect more `is_strategy_video=false` results. |
+| @tastytrade_ | US options content built around **mechanical rules on US underlyings** (e.g. sell around 45 DTE, about 16-delta strangles, manage winners at 50%, manage at 21 DTE). Very large library with many daily live shows, so run with `--limit` first. The rules need adapting to NIFTY's weekly and monthly expiries before backtesting. |
+| @Tradingwith915 | Not yet reviewed. Check the first `--limit 20` run. |
