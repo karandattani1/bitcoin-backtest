@@ -1,2 +1,4 @@
 __pycache__/
 *.pyc
+data/market/raw_fo/
+.pytest_cache/
