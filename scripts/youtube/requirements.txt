@@ -1,6 +1,5 @@
 yt-dlp>=2026.8.19
 youtube-transcript-api>=1.2.4
-anthropic>=1.15.0
 pydantic>=2
 # Optional, only for videos without captions (yt_fetch.py --whisper). Also needs ffmpeg on PATH.
 # faster-whisper>=1.1

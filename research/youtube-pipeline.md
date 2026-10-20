@@ -13,7 +13,7 @@ A strategy video carries information in four places. Each one needs a different 
 | **On-screen visuals** | Backtest screenshots, indicator settings, the AlgoTest/Tradetron config screen, P&L tables | Download the video at low resolution, extract keyframes with `ffmpeg`, then OCR or a vision model |
 | **Comments** | Viewers' live results, corrections, "this stopped working after X" | YouTube Data API `commentThreads` |
 
-Then an LLM pass (e.g. Claude) turns the text into a **fixed strategy schema**. Duplicates get merged,
+Then an LLM pass (a local Gemma model) turns the text into a **fixed strategy schema**. Duplicates get merged,
 and each strategy becomes a rule card in the format of [strategy-rulebook.md](strategy-rulebook.md),
 ready to backtest.
 
@@ -108,7 +108,6 @@ Ask the LLM to fill this structure and to write `null` rather than guess:
 
 - `completeness` is the share of the fields a backtest needs that were found.
 - `pre_sep_2025_only` flags videos built around expiries that no longer exist (BankNifty weekly, Thursday NIFTY).
-- A cheaper model is enough for the step-2 yes/no filter. Use a stronger model for this extraction step.
 - Run the extraction twice on a sample and compare the outputs to catch errors.
 
 ### 6. Merge duplicates
@@ -146,12 +145,29 @@ pip install yt-dlp youtube-transcript-api google-api-python-client faster-whispe
 
 ## Implementation
 
-This plan is built in [`scripts/youtube/`](../scripts/youtube/README.md):
-- `yt_fetch.py` covers steps 1–3. It lists videos with `yt-dlp` (no API key needed), filters titles, and fetches captions, with Whisper as a fallback.
-- `yt_extract.py` is step 5, using Claude structured output.
+This plan is built in [`scripts/youtube/`](../scripts/youtube/README.md) and **runs entirely on a local Gemma model**:
+- `yt_fetch.py` covers steps 1–3: video listing with `yt-dlp`, the title filter, and captions with Whisper as a fallback.
+- `yt_extract.py` screens videos, then extracts strategies with Gemma through Ollama or an OpenAI-compatible server.
 - `yt_catalog.py` covers steps 6–7.
 
-The frame/OCR step (4) is not built yet. Add it once `missing_for_backtest` shows which videos need it.
+The frame/OCR step (4) is not built yet.
+
+### Checking Gemma's output
+
+A local model is free to run, but it's more likely to misread garbled Hindi numbers or fill in parameters the video never stated. So:
+- spot-check about 10 `strategy.json` files against the videos, using the evidence timestamps;
+- keep `completeness` and `missing_for_backtest` in mind when deciding what to backtest;
+- treat any rule without an evidence timestamp as unconfirmed.
+
+### NotebookLM: useful for manual checks, not as the pipeline
+
+NotebookLM accepts YouTube links as sources (it reads their captions) and answers questions with citations.
+That makes it good for **interactively checking one channel or topic**. For example, add the 20–50 videos the catalog flags as most important and ask "list every rule for the 9:20 straddle variants with timestamps", then compare with `strategy.json`.
+
+It isn't a replacement for the scripts:
+- there's a limit on how many sources a notebook can hold;
+- the consumer version has no batch API, so results have to be copied out by hand;
+- its answers aren't in a fixed schema, so they can't feed the catalog or backtester directly.
 
 ### Channels and what to expect
 
