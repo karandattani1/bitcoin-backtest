@@ -139,7 +139,7 @@ Ask the LLM to fill this structure and to write `null` rather than guess:
 ## Tools to install (on your machine)
 
 ```
-pip install yt-dlp youtube-transcript-api google-api-python-client faster-whisper anthropic
+pip install -r scripts/youtube/requirements.txt   # plus faster-whisper if you use --whisper
 # plus: ffmpeg (brew/apt), optional tesseract-ocr
 ```
 
